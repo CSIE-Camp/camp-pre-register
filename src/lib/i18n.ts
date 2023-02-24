@@ -1,7 +1,7 @@
 import { browser } from "$app/environment";
 import { init, register } from "svelte-i18n";
 
-const fallback = "en";
+const fallback = "zh-TW";
 
 register("en", () => import("$i18n/en.json"));
 register("zh-TW", () => import("$i18n/zh-TW.json"));
