@@ -33,8 +33,8 @@
 			return;
 		}
 
-		for (let i = 0; i < 10; i++) {
-			frames.push(frame(i));
+		for (let i = 0; i < 100; i++) {
+			frames.push(frame(i / 10));
 		}
 		frames.forEach((frame) => scene.add(frame));
 
@@ -53,6 +53,15 @@
 			camera.aspect = ratio;
 			camera.updateProjectionMatrix();
 			renderer.setSize(window.innerWidth, window.innerHeight);
+		});
+
+		document.addEventListener("mousemove", (event) => {
+			const dx =
+				(((window.innerWidth / 2 - event.clientX) / window.innerWidth) * Math.PI) / 18;
+			const dy =
+				(((window.innerHeight / 2 - event.clientY) / window.innerHeight) * Math.PI) / 18;
+			camera.rotation.x = Math.PI / 2 + dy;
+			camera.rotation.y = Math.PI / 2 + dx;
 		});
 
 		animate();
