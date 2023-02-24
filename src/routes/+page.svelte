@@ -4,6 +4,7 @@
 	import { fade } from "svelte/transition";
 	import * as THREE from "three";
 
+	let webgl_ok = false;
 	let show_canvas = false;
 	let show_form = false;
 	let ratio = 1;
@@ -25,6 +26,18 @@
 	const frames: THREE.Line[] = [];
 
 	onMount(() => {
+		webgl_ok = (() => {
+			try {
+				const canvas = document.createElement("canvas");
+				return !!(
+					!!window.WebGLRenderingContext &&
+					(canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+				);
+			} catch (e) {
+				return false;
+			}
+		})();
+
 		ratio = window.innerWidth / window.innerHeight;
 		show_canvas = true;
 		const canvas = document.querySelector("canvas") || undefined;
@@ -109,20 +122,20 @@
 	/>
 
 	{#if show_form}
-		<div class="prose text-white" transition:fade={{ delay: 1500 }}>
-			<h1 class="text-white">{$t("pre-register")}</h1>
+		<div class="prose" class:text-white={webgl_ok} transition:fade={{ delay: 1500 }}>
+			<h1 class:text-white={webgl_ok}>{$t("pre-register")}</h1>
 			<p>{$t("we-are-preparing")}</p>
 			<p>{$t("get-notifications")}</p>
 
 			<div class="form-control w-full">
 				<label class="label" for="email">
-					<span class="label-text text-white">{$t("email")}</span>
+					<span class="label-text" class:text-white={webgl_ok}>{$t("email")}</span>
 				</label>
 				<input
 					id="email"
 					type="text"
 					placeholder={$t("enter-your-email")}
-					class="input input-primary input-bordered w-full"
+					class="input input-primary input-bordered w-full text-primary"
 				/>
 				<label class="label" for="email">
 					<span class="label-text-alt text-error">{email_error}</span>
