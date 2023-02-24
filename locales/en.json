@@ -1,4 +1,10 @@
 {
-  "welcome": "Welcome to SvelteKit",
-  "with-tech": "with TailwindCSS, DaisyUI, and I18n!"
+	"description": "Pre-register to get notifications from NTNU CSIE Camp!",
+	"email": "Your Email",
+	"enter-your-email": "",
+	"get-notifications": "",
+	"pre-register": "",
+	"submit": "Submit",
+	"title": "Pre-registration on NTNU CSIE Camp",
+	"we-are-preparing": ""
 }
