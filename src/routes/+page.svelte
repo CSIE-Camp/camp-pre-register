@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { t } from "svelte-i18n";
+	import { cubicOut } from "svelte/easing";
+	import { tweened } from "svelte/motion";
 	import { fade } from "svelte/transition";
 	import * as THREE from "three";
 	import { z } from "zod";
@@ -9,6 +11,8 @@
 	let show_canvas = false;
 	let show_form = false;
 	let ratio = 1;
+	let x = tweened(Math.PI / 2, { duration: 300, easing: cubicOut });
+	let y = tweened(Math.PI / 2, { duration: 300, easing: cubicOut });
 
 	let camera: THREE.PerspectiveCamera;
 	let renderer: THREE.WebGLRenderer;
@@ -56,6 +60,8 @@
 		camera.position.set(10, 0, 0);
 		camera.lookAt(0, 0, 0);
 		camera.rotateZ(Math.PI / 2);
+		x.subscribe((value) => (camera.rotation.x = value));
+		y.subscribe((value) => (camera.rotation.y = value));
 
 		renderer = new THREE.WebGLRenderer({ canvas });
 		renderer.setSize(window.innerWidth, window.innerHeight);
@@ -69,14 +75,13 @@
 			renderer.setSize(window.innerWidth, window.innerHeight);
 		});
 
-		document.addEventListener("mousemove", (event) => {
-			const dy =
-				(((window.innerWidth / 2 - event.clientX) / window.innerWidth) * Math.PI) / 18;
-			const dx =
-				(((window.innerHeight / 2 - event.clientY) / window.innerHeight) * Math.PI) / 18;
-			camera.rotation.x = Math.PI / 2 - dx;
-			camera.rotation.y = Math.PI / 2 + dy;
-		});
+		document.addEventListener("mousemove", (event) => move(event.clientX, event.clientY));
+		document.addEventListener("touchmove", (event) =>
+			move(
+				[...event.touches].reduce((a, b) => a + b.clientX, 0) / event.touches.length,
+				[...event.touches].reduce((a, b) => a + b.clientY, 0) / event.touches.length,
+			),
+		);
 
 		animate();
 
@@ -114,6 +119,13 @@
 		const line = new THREE.Line(geometry, material);
 		line.position.set(10 - distance, -ratio / 2, -0.5);
 		return line;
+	}
+
+	function move(x: number, y: number) {
+		const dy = (((window.innerWidth / 2 - x) / window.innerWidth) * Math.PI) / 18;
+		const dx = (((window.innerHeight / 2 - y) / window.innerHeight) * Math.PI) / 18;
+		$x = Math.PI / 2 - dx;
+		$y = Math.PI / 2 + dy;
 	}
 
 	let email_error = "";
