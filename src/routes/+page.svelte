@@ -3,6 +3,7 @@
 	import { t } from "svelte-i18n";
 	import { fade } from "svelte/transition";
 	import * as THREE from "three";
+	import { z } from "zod";
 
 	let webgl_ok = false;
 	let show_canvas = false;
@@ -69,12 +70,12 @@
 		});
 
 		document.addEventListener("mousemove", (event) => {
-			const dx =
-				(((window.innerWidth / 2 - event.clientX) / window.innerWidth) * Math.PI) / 18;
 			const dy =
+				(((window.innerWidth / 2 - event.clientX) / window.innerWidth) * Math.PI) / 18;
+			const dx =
 				(((window.innerHeight / 2 - event.clientY) / window.innerHeight) * Math.PI) / 18;
-			camera.rotation.x = Math.PI / 2 + dy;
-			camera.rotation.y = Math.PI / 2 + dx;
+			camera.rotation.x = Math.PI / 2 - dx;
+			camera.rotation.y = Math.PI / 2 + dy;
 		});
 
 		animate();
@@ -82,13 +83,16 @@
 		show_form = true;
 	});
 
+	let last = Date.now();
 	function animate() {
 		requestAnimationFrame(animate);
 
+		const offset = (Date.now() - last) / 5000;
+		last = Date.now();
 		for (const frame of frames) {
-			frame.translateX(0.01);
-			if (frame.position.x > 10) {
-				frame.position.x = 0;
+			frame.translateX(offset);
+			while (frame.position.x > 10) {
+				frame.position.x -= 10;
 			}
 		}
 
@@ -113,6 +117,45 @@
 	}
 
 	let email_error = "";
+	let success = false;
+	let email = "";
+	let submitting = false;
+	async function submit() {
+		if (submitting) {
+			return;
+		}
+		submitting = true;
+
+		try {
+			if (!email) {
+				throw new Error("請輸入電子郵件");
+			}
+
+			try {
+				z.string().email().max(128).parse(email);
+			} catch {
+				throw new Error("電子郵件格式錯誤");
+			}
+
+			const res = await fetch("/submit?email=" + email);
+			if (res.status === 200) {
+				const { success: s, error } = await res.json<{ success: boolean; error: string }>();
+				if (s) {
+					success = true;
+				} else {
+					throw new Error(error);
+				}
+			} else {
+				throw new Error("網路錯誤");
+			}
+		} catch (err) {
+			if (err instanceof Error) {
+				email_error = err.message;
+			}
+		} finally {
+			submitting = false;
+		}
+	}
 </script>
 
 <div class="h-full w-full flex justify-center items-center p-2">
@@ -127,23 +170,39 @@
 			<p>{$t("we-are-preparing")}</p>
 			<p>{$t("get-notifications")}</p>
 
-			<div class="form-control w-full">
-				<label class="label" for="email">
-					<span class="label-text" class:text-white={webgl_ok}>{$t("email")}</span>
-				</label>
-				<input
-					id="email"
-					type="text"
-					placeholder={$t("enter-your-email")}
-					class="input input-primary input-bordered w-full text-primary"
-				/>
-				<label class="label" for="email">
-					<span class="label-text-alt text-error">{email_error}</span>
-					<span class="label-text-alt" />
-				</label>
-			</div>
+			{#if success}
+				<p transition:fade={{ duration: 300, delay: 300 }}>
+					{$t("success", { values: { email } })}
+				</p>
+			{:else}
+				<div class="w-full" transition:fade={{ duration: 300 }}>
+					<div class="form-control w-full">
+						<label class="label" for="email">
+							<span class="label-text" class:text-white={webgl_ok}>{$t("email")}</span
+							>
+						</label>
+						<input
+							id="email"
+							type="text"
+							placeholder={$t("enter-your-email")}
+							bind:value={email}
+							class="input input-primary input-bordered w-full text-primary"
+						/>
+						<label class="label" for="email">
+							<span class="label-text-alt text-error">{email_error}</span>
+							<span class="label-text-alt" />
+						</label>
+					</div>
 
-			<button class="btn btn-primary px-6 float-right">{$t("submit")}</button>
+					<button
+						class="btn btn-primary px-6 float-right"
+						on:click={submit}
+						disabled={submitting}
+					>
+						{$t("submit")}
+					</button>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>
