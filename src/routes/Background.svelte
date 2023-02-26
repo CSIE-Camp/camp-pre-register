@@ -2,7 +2,7 @@
 	import { page } from "$app/stores";
 	import type Stats from "stats.js";
 	import { onMount } from "svelte";
-	import { cubicOut } from "svelte/easing";
+	import { cubicOut, cubicInOut } from "svelte/easing";
 	import { tweened } from "svelte/motion";
 	import * as THREE from "three";
 	import Helvetiker from "three/examples/fonts/helvetiker_regular.typeface.json";
@@ -14,16 +14,24 @@
 
 	let show_canvas = false;
 	let ratio = 1;
-	let x = tweened(0, { duration: 300, easing: cubicOut });
-	let y = tweened(0, { duration: 300, easing: cubicOut });
+	const x = tweened(0, { duration: 300, easing: cubicOut });
+	const y = tweened(0, { duration: 300, easing: cubicOut });
+	const mouse = new THREE.Vector2();
+	let locked: THREE.Intersection | undefined;
+	const speed = tweened(1, { duration: 500, easing: cubicInOut });
 
 	let camera: THREE.PerspectiveCamera;
 	let renderer: THREE.WebGLRenderer;
+	const raycaster = new THREE.Raycaster();
 	let stats: Stats;
 
 	const scene = new THREE.Scene();
-	scene.background = new THREE.Color(0x192189);
-	scene.fog = new THREE.Fog(0x192189, 1, 5);
+	const bg = new THREE.Color(0x192189);
+	const bg2 = new THREE.Color(0xcccccc);
+	scene.background = bg;
+	const fog = new THREE.Fog(bg, 1, 5);
+	const fog2 = new THREE.Fog(bg2, 1, 5);
+	scene.fog = fog;
 	// scene.add(
 	// 	new THREE.AxesHelper(5).setColors(
 	// 		new THREE.Color(0xff0000),
@@ -86,6 +94,33 @@
 				[...event.touches].reduce((a, b) => a + b.clientY, 0) / event.touches.length,
 			),
 		);
+		document.addEventListener("mousedown", (event) => {
+			if (event.button === 0) {
+				lock(event.clientX, event.clientY);
+			}
+		});
+		document.addEventListener("keypress", (event) => {
+			const MAX_SPEED = 20;
+			const STEP = 0.5;
+			if (event.key === "w") {
+				speed.set($speed + STEP > MAX_SPEED ? MAX_SPEED : $speed + STEP, { duration: 100 });
+			} else if (event.key === "s") {
+				speed.set($speed - STEP < 0 ? 0 : $speed - STEP, { duration: 100 });
+			} else if (event.key === "W") {
+				$speed = MAX_SPEED;
+			} else if (event.key === "S") {
+				$speed = 0;
+			}
+
+			if ($speed >= MAX_SPEED) {
+				scene.background = bg2;
+				scene.fog = fog2;
+			}
+			if ($speed < MAX_SPEED) {
+				scene.background = bg;
+				scene.fog = fog;
+			}
+		});
 
 		animate();
 
@@ -106,14 +141,19 @@
 		const offset = (Date.now() - last) / 5000;
 		last = Date.now();
 		for (const frame of frames) {
-			frame.translateZ(offset);
+			frame.translateZ($speed * offset);
 			while (frame.position.z > 0) {
 				frame.position.z -= DEPTH;
 			}
 		}
 		for (let i = 0; i < models.length; i++) {
 			const model = models[i];
-			model.m.translateZ(offset * model.v);
+
+			if (locked?.object === model.m || locked?.object?.parent === model.m) {
+				continue;
+			}
+
+			model.m.translateZ($speed * offset * model.v);
 			model.m.rotateZ(offset * Math.PI * model.w);
 			while (model.m.position.z > 0) {
 				if (model.t === "text") {
@@ -184,6 +224,15 @@
 		const dx = (((window.innerHeight / 2 - y) / window.innerHeight) * Math.PI) / 18;
 		$x = dx;
 		$y = dy;
+	}
+
+	function lock(x: number, y: number) {
+		mouse.x = (x / window.innerWidth) * 2 - 1;
+		mouse.y = -(y / window.innerHeight) * 2 + 1;
+		raycaster.setFromCamera(mouse, camera);
+		locked = raycaster
+			.intersectObjects(scene.children)
+			.filter((x) => !(x.object instanceof THREE.Line))[0];
 	}
 
 	async function load_models() {
