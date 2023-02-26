@@ -5,7 +5,10 @@
 	import { cubicOut } from "svelte/easing";
 	import { tweened } from "svelte/motion";
 	import * as THREE from "three";
+	import Helvetiker from "three/examples/fonts/helvetiker_regular.typeface.json";
+	import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 	import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+	import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 
 	const DEPTH = 6;
 
@@ -54,11 +57,12 @@
 		frames.forEach((frame) => scene.add(frame));
 
 		models.push(...(await load_models()));
-		models.forEach((num) => scene.add(num.m));
+		models.push(create_text());
+		models.forEach((model) => scene.add(model.m));
 
 		lines().forEach((line) => scene.add(line));
 
-		camera = new THREE.PerspectiveCamera(75, ratio, 0.1, 2000);
+		camera = new THREE.PerspectiveCamera(75, ratio, 0.05, 2000);
 		camera.position.set(0, 0, 0);
 		x.subscribe((value) => (camera.rotation.x = value));
 		y.subscribe((value) => (camera.rotation.y = value));
@@ -107,10 +111,20 @@
 				frame.position.z -= DEPTH;
 			}
 		}
-		for (const model of models) {
+		for (let i = 0; i < models.length; i++) {
+			const model = models[i];
 			model.m.translateZ(offset * model.v);
 			model.m.rotateZ(offset * Math.PI * model.w);
 			while (model.m.position.z > 0) {
+				if (model.t === "text") {
+					scene.remove(model.m);
+					model.m.clear();
+					const m = create_text();
+					models.splice(i, 1, m);
+					scene.add(m.m);
+					break;
+				}
+
 				model.m.position.z -= DEPTH;
 				model.m.position.x = (1 - Math.random() * 2) * ratio * 0.5;
 				model.m.position.y = 1 - Math.random() * 2;
@@ -213,6 +227,85 @@
 		}
 
 		return models;
+	}
+
+	const messages = [
+		"NTNU",
+		"CSIE",
+		"JS",
+		"HTML",
+		"SCSS",
+		"Hugo",
+		"Bot",
+		"Security",
+		"Crypto",
+	].sort(() => Math.random() - 0.5);
+	let message_index = 0;
+
+	const loader = new FontLoader();
+	const font = loader.parse(Helvetiker);
+	const color_cyan = new THREE.Color(0x00cccc);
+	const color_magenta = new THREE.Color(0xcc00cc);
+	const color_yellow = new THREE.Color(0xcccc00);
+	const color_key = new THREE.Color(0xcccccc);
+	function create_text() {
+		const message = messages[message_index++ % messages.length];
+		const color = [color_cyan, color_yellow, color_magenta, color_key].sort(
+			() => Math.random() - 0.5,
+		)[0];
+		const shapes = font.generateShapes(message, 0.2);
+		const geometry = new THREE.ShapeGeometry(shapes);
+		geometry.computeBoundingBox();
+
+		// @ts-expect-error
+		const x_mid = -0.5 * (geometry.boundingBox.max.x - geometry.boundingBox.min.x);
+		// @ts-expect-error
+		const y_mid = -0.5 * (geometry.boundingBox.max.y - geometry.boundingBox.min.y);
+		geometry.translate(x_mid, y_mid, 0);
+
+		const holes: THREE.Path[] = [];
+
+		for (const shape of shapes) {
+			if (shape.holes) {
+				for (const hole of shape.holes) {
+					holes.push(hole);
+				}
+			}
+		}
+
+		// @ts-expect-error
+		shapes.push.apply(shapes, holes);
+
+		const style = SVGLoader.getStrokeStyle(0.005, color.getStyle(), "round", "round");
+
+		const group = new THREE.Group();
+
+		const material = new THREE.MeshBasicMaterial({ color });
+		for (const shape of shapes) {
+			const points = shape.getPoints();
+
+			// @ts-expect-error
+			const geometry = SVGLoader.pointsToStroke(points, style);
+			geometry.translate(x_mid, y_mid, 0);
+
+			const mesh = new THREE.Mesh(geometry, material);
+			group.add(mesh);
+		}
+
+		group.position.set(
+			(1 - Math.random() * 2) * ratio * 0.5,
+			(1 - Math.random() * 2) * 0.5,
+			-DEPTH,
+		);
+
+		return {
+			m: group,
+			vg: () => Math.random() * 3 + 1,
+			v: Math.random() * 3 + 1,
+			wg: () => 0,
+			w: 0,
+			t: "text",
+		};
 	}
 </script>
 
