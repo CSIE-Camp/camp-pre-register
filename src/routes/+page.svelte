@@ -21,7 +21,9 @@
 			}
 		})();
 
-		show_form = true;
+		setTimeout(() => {
+			show_form = true;
+		}, 100);
 	});
 
 	let email_error = "";
