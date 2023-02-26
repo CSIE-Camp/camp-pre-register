@@ -5,11 +5,13 @@
 	import * as THREE from "three";
 	import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+	const DEPTH = 6;
+
 	let show_canvas = false;
 	let show_form = false;
 	let ratio = 1;
-	let x = tweened(Math.PI / 2, { duration: 300, easing: cubicOut });
-	let y = tweened(Math.PI / 2, { duration: 300, easing: cubicOut });
+	let x = tweened(0, { duration: 300, easing: cubicOut });
+	let y = tweened(0, { duration: 300, easing: cubicOut });
 
 	let camera: THREE.PerspectiveCamera;
 	let renderer: THREE.WebGLRenderer;
@@ -44,7 +46,7 @@
 			return;
 		}
 
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < 10 * DEPTH; i++) {
 			frames.push(frame(i / 10));
 		}
 		frames.forEach((frame) => scene.add(frame));
@@ -53,9 +55,7 @@
 		models.forEach((num) => scene.add(num.m));
 
 		camera = new THREE.PerspectiveCamera(75, ratio, 0.1, 2000);
-		camera.position.set(10, 0, 0);
-		camera.lookAt(0, 0, 0);
-		camera.rotateZ(Math.PI / 2);
+		camera.position.set(0, 0, 0);
 		x.subscribe((value) => (camera.rotation.x = value));
 		y.subscribe((value) => (camera.rotation.y = value));
 
@@ -91,18 +91,18 @@
 		const offset = (Date.now() - last) / 5000;
 		last = Date.now();
 		for (const frame of frames) {
-			frame.translateX(offset);
-			while (frame.position.x > 10) {
-				frame.position.x -= 10;
+			frame.translateZ(offset);
+			while (frame.position.z > 0) {
+				frame.position.z -= DEPTH;
 			}
 		}
 		for (const model of models) {
-			model.m.translateX(offset * model.v);
-			model.m.rotateX(offset * Math.PI * model.w);
-			while (model.m.position.x > 10) {
-				model.m.position.x -= 10;
-				model.m.position.y = (1 - Math.random() * 2) * ratio * 0.5;
-				model.m.position.z = 1 - Math.random() * 2;
+			model.m.translateZ(offset * model.v);
+			model.m.rotateZ(offset * Math.PI * model.w);
+			while (model.m.position.z > 0) {
+				model.m.position.z -= DEPTH;
+				model.m.position.x = (1 - Math.random() * 2) * ratio * 0.5;
+				model.m.position.y = 1 - Math.random() * 2;
 				model.v = model.vg();
 				model.w = model.wg();
 			}
@@ -114,23 +114,23 @@
 	function frame(distance = 10) {
 		const geometry = new THREE.BufferGeometry().setFromPoints([
 			new THREE.Vector3(0, 0, 0),
-			new THREE.Vector3(0, ratio * 2, 0),
-			new THREE.Vector3(0, ratio * 2, 2),
-			new THREE.Vector3(0, 0, 2),
+			new THREE.Vector3(ratio * 2, 0, 0),
+			new THREE.Vector3(ratio * 2, 2, 0),
+			new THREE.Vector3(0, 2, 0),
 			new THREE.Vector3(0, 0, 0),
 		]);
 
 		const material = new THREE.LineBasicMaterial({ color: 0x999999, linewidth: 3 });
 		const line = new THREE.Line(geometry, material);
-		line.position.set(10 - distance, -ratio, -1);
+		line.position.set(-ratio, -1, DEPTH - distance);
 		return line;
 	}
 
 	function move(x: number, y: number) {
 		const dy = (((window.innerWidth / 2 - x) / window.innerWidth) * Math.PI) / 18;
 		const dx = (((window.innerHeight / 2 - y) / window.innerHeight) * Math.PI) / 18;
-		$x = Math.PI / 2 - dx;
-		$y = Math.PI / 2 + dy;
+		$x = dx;
+		$y = dy;
 	}
 
 	async function load_models() {
