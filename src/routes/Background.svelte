@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from "$app/stores";
+	import type Stats from "stats.js";
 	import { onMount } from "svelte";
 	import { cubicOut } from "svelte/easing";
 	import { tweened } from "svelte/motion";
@@ -8,13 +10,13 @@
 	const DEPTH = 6;
 
 	let show_canvas = false;
-	let show_form = false;
 	let ratio = 1;
 	let x = tweened(0, { duration: 300, easing: cubicOut });
 	let y = tweened(0, { duration: 300, easing: cubicOut });
 
 	let camera: THREE.PerspectiveCamera;
 	let renderer: THREE.WebGLRenderer;
+	let stats: Stats;
 
 	const scene = new THREE.Scene();
 	scene.background = new THREE.Color(0x192189);
@@ -83,12 +85,19 @@
 
 		animate();
 
-		show_form = true;
+		if ($page.url.searchParams.has("dev")) {
+			const Stats = (await import("stats.js")).default;
+			stats = new Stats();
+			stats.showPanel(0);
+			document.body.appendChild(stats.dom);
+		}
 	});
 
 	let last = Date.now();
 	function animate() {
 		requestAnimationFrame(animate);
+
+		stats?.begin();
 
 		const offset = (Date.now() - last) / 5000;
 		last = Date.now();
@@ -111,6 +120,8 @@
 		}
 
 		renderer.render(scene, camera);
+
+		stats?.end();
 	}
 
 	function frame(distance = 10) {

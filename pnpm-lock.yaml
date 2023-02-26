@@ -9,6 +9,7 @@ specifiers:
     "@sveltejs/kit": ^1.8.3
     "@tailwindcss/typography": ^0.5.9
     "@trivago/prettier-plugin-sort-imports": ^4.1.1
+    "@types/stats.js": ^0.17.0
     "@types/three": ^0.149.0
     "@typescript-eslint/eslint-plugin": ^5.53.0
     "@typescript-eslint/parser": ^5.53.0
@@ -23,6 +24,7 @@ specifiers:
     prettier: ^2.8.4
     prettier-plugin-svelte: ^2.9.0
     prettier-plugin-tailwindcss: ^0.2.3
+    stats.js: ^0.17.0
     svelte: ^3.55.1
     svelte-check: ^3.0.4
     svelte-i18n: ^3.6.0
@@ -43,6 +45,7 @@ devDependencies:
     "@sveltejs/kit": 1.8.3_svelte@3.55.1+vite@4.1.4
     "@tailwindcss/typography": 0.5.9_tailwindcss@3.2.7
     "@trivago/prettier-plugin-sort-imports": 4.1.1_prettier@2.8.4
+    "@types/stats.js": 0.17.0
     "@types/three": 0.149.0
     "@typescript-eslint/eslint-plugin": 5.53.0_ny4s7qc6yg74faf3d6xty2ofzy
     "@typescript-eslint/parser": 5.53.0_7kw3g6rralp5ps6mg3uyzz6azm
@@ -57,6 +60,7 @@ devDependencies:
     prettier: 2.8.4
     prettier-plugin-svelte: 2.9.0_jrsxveqmsx2uadbqiuq74wlc4u
     prettier-plugin-tailwindcss: 0.2.3_sc4x6beby3zq3uwr23pgxnhigq
+    stats.js: 0.17.0
     svelte: 3.55.1
     svelte-check: 3.0.4_pehl75e5jsy22vp33udjja4soi
     svelte-i18n: 3.6.0_svelte@3.55.1
@@ -1165,6 +1169,13 @@ packages:
         resolution:
             {
                 integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==,
+            }
+        dev: true
+
+    /@types/stats.js/0.17.0:
+        resolution:
+            {
+                integrity: sha512-9w+a7bR8PeB0dCT/HBULU2fMqf6BAzvKbxFboYhmDtDkKPiyXYbjoe2auwsXlEFI7CFNMF1dCv3dFH5Poy9R1w==,
             }
         dev: true
 
@@ -5377,6 +5388,13 @@ packages:
         resolution:
             {
                 integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==,
+            }
+        dev: true
+
+    /stats.js/0.17.0:
+        resolution:
+            {
+                integrity: sha512-hNKz8phvYLPEcRkeG1rsGmV5ChMjKDAWU7/OJJdDErPBNChQXxCo3WZurGpnWc6gZhAzEPFad1aVgyOANH1sMw==,
             }
         dev: true
 
