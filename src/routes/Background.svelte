@@ -54,6 +54,8 @@
 		models.push(...(await load_models()));
 		models.forEach((num) => scene.add(num.m));
 
+		lines().forEach((line) => scene.add(line));
+
 		camera = new THREE.PerspectiveCamera(75, ratio, 0.1, 2000);
 		camera.position.set(0, 0, 0);
 		x.subscribe((value) => (camera.rotation.x = value));
@@ -124,6 +126,32 @@
 		const line = new THREE.Line(geometry, material);
 		line.position.set(-ratio, -1, DEPTH - distance);
 		return line;
+	}
+
+	function lines() {
+		const material = new THREE.LineBasicMaterial({ color: 0x999999, linewidth: 3 });
+		const geometry = new THREE.BufferGeometry().setFromPoints([
+			new THREE.Vector3(0, 0, 0),
+			new THREE.Vector3(0, 0, -DEPTH),
+		]);
+		const line = new THREE.Line(geometry, material);
+
+		const lines: THREE.Line[] = [];
+
+		for (let i = 0; i < 10; i++) {
+			add(-ratio + (i * ratio) / 5, -1);
+			add(ratio, -1 + i / 5);
+			add(-ratio + ((i + 1) * ratio) / 5, 1);
+			add(-ratio, -1 + (i + 1) / 5);
+		}
+
+		function add(x: number, y: number) {
+			const l = line.clone();
+			l.position.set(x, y, 0);
+			lines.push(l);
+		}
+
+		return lines;
 	}
 
 	function move(x: number, y: number) {
