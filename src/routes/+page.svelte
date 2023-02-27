@@ -7,6 +7,7 @@
 
 	let webgl_ok = false;
 	let show_form = false;
+	let bg: Background;
 
 	onMount(async () => {
 		webgl_ok = (() => {
@@ -21,13 +22,22 @@
 			}
 		})();
 
-		setTimeout(() => {
-			show_form = true;
-		}, 100);
+		if (!webgl_ok) {
+			setTimeout(() => {
+				show_form = true;
+			}, 100);
+		}
 	});
 
 	let email_error = "";
 	let success = false;
+	$: {
+		if (success) {
+			for (let i = 0; i < 60; i++) {
+				setTimeout(() => bg.write("Thanks!", 0.1), i * 50);
+			}
+		}
+	}
 	let email = "";
 	let submitting = false;
 	async function submit() {
@@ -69,7 +79,7 @@
 </script>
 
 <div class="h-full w-full flex justify-center items-center p-2">
-	<Background />
+	<Background on:ready|once={() => (show_form = true)} bind:this={bg} />
 
 	{#if show_form}
 		<div class="prose" class:text-white={webgl_ok} transition:fade={{ delay: 1500 }}>
@@ -94,6 +104,12 @@
 							placeholder={$t("enter-your-email")}
 							bind:value={email}
 							class="input input-primary input-bordered w-full text-primary"
+							on:keydown={(e) => {
+								const { key } = e;
+								if (/^[a-zA-Z0-9@._+-]$/.test(key)) {
+									bg.write(key);
+								}
+							}}
 						/>
 						<label class="label" for="email">
 							<span class="label-text-alt text-error">{email_error}</span>

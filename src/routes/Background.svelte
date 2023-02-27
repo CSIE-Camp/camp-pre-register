@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/stores";
 	import type Stats from "stats.js";
-	import { onMount } from "svelte";
+	import { onMount, createEventDispatcher } from "svelte";
 	import { cubicOut, cubicInOut } from "svelte/easing";
 	import { tweened } from "svelte/motion";
 	import * as THREE from "three";
@@ -10,7 +10,13 @@
 	import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 	import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 
-	const DEPTH = 6;
+	export let DEPTH = 6;
+	const dispatch = createEventDispatcher();
+	export const write = (text: string, size = 0.15) => {
+		const m = create_text({ message: text, vg: () => 12, once: true, size });
+		models.push(m);
+		scene.add(m.m);
+	};
 
 	let show_canvas = false;
 	let ratio = 1;
@@ -48,6 +54,7 @@
 		wg: () => number;
 		w: number;
 		t: string;
+		once?: boolean;
 	}[] = [];
 
 	onMount(async () => {
@@ -100,6 +107,10 @@
 			}
 		});
 		document.addEventListener("keypress", (event) => {
+			if (event.target instanceof HTMLInputElement) {
+				return;
+			}
+
 			const MAX_SPEED = 20;
 			const STEP = 0.5;
 			if (event.key === "w") {
@@ -123,6 +134,7 @@
 		});
 
 		animate();
+		dispatch("ready");
 
 		if ($page.url.searchParams.has("dev")) {
 			const Stats = (await import("stats.js")).default;
@@ -156,6 +168,12 @@
 			model.m.translateZ($speed * offset * model.v);
 			model.m.rotateZ(offset * Math.PI * model.w);
 			while (model.m.position.z > 0) {
+				if (model.once) {
+					scene.remove(model.m);
+					model.m.clear();
+					models.splice(i, 1);
+					break;
+				}
 				if (model.t === "text") {
 					scene.remove(model.m);
 					model.m.clear();
@@ -297,12 +315,17 @@
 	const color_magenta = new THREE.Color(0xcc00cc);
 	const color_yellow = new THREE.Color(0xcccc00);
 	const color_key = new THREE.Color(0xcccccc);
-	function create_text() {
-		const message = messages[message_index++ % messages.length];
-		const color = [color_cyan, color_yellow, color_magenta, color_key].sort(
+	function create_text({
+		message = messages[message_index++ % messages.length],
+		color = [color_cyan, color_yellow, color_magenta, color_key].sort(
 			() => Math.random() - 0.5,
-		)[0];
-		const shapes = font.generateShapes(message, 0.2);
+		)[0],
+		vg = () => Math.random() * 3 + 1,
+		wg = () => 0,
+		once = false,
+		size = 0.2,
+	} = {}) {
+		const shapes = font.generateShapes(message, size);
 		const geometry = new THREE.ShapeGeometry(shapes);
 		geometry.computeBoundingBox();
 
@@ -325,7 +348,7 @@
 		// @ts-expect-error
 		shapes.push.apply(shapes, holes);
 
-		const style = SVGLoader.getStrokeStyle(0.005, color.getStyle(), "round", "round");
+		const style = SVGLoader.getStrokeStyle(size / 40, color.getStyle(), "round", "round");
 
 		const group = new THREE.Group();
 
@@ -349,11 +372,12 @@
 
 		return {
 			m: group,
-			vg: () => Math.random() * 3 + 1,
-			v: Math.random() * 3 + 1,
-			wg: () => 0,
-			w: 0,
+			vg,
+			v: vg(),
+			wg,
+			w: wg(),
 			t: "text",
+			once,
 		};
 	}
 </script>
