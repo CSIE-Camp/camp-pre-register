@@ -78,6 +78,10 @@
 	}
 </script>
 
+<svelte:head>
+	<link rel="canonical" href="https://camp.csie.cool/" />
+</svelte:head>
+
 <div class="h-full w-full flex justify-center items-center p-2">
 	<Background on:ready|once={() => (show_form = true)} bind:this={bg} />
 
