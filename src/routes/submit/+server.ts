@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		return json({ success: false, error: "資料庫在鬧脾氣" });
 	}
 
-	const db = new D1Database(db_fetcher);
+	const db = "fetch" in db_fetcher ? new D1Database(db_fetcher) : db_fetcher;
 
 	try {
 		const result = await db
