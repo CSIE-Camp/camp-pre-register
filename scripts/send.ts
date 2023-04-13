@@ -35,6 +35,10 @@ program
 			process.exit(1);
 		}
 
+		if (options.list && options.list.toLowerCase().includes("dev")) {
+			options.subject = "[測試] " + options.subject;
+		}
+
 		console.log("Emails:", emails.join(", "));
 
 		const { confirm } = await inquirer.prompt([
@@ -50,8 +54,8 @@ program
 			return;
 		}
 
-		for (let i = 0; i < emails.length; i += 10) {
-			const targets = emails.slice(i, i + 10);
+		for (let i = 0; i < emails.length; i += 100) {
+			const targets = emails.slice(i, i + 100);
 			await send(targets, subject, html);
 			console.log(
 				`Sent emails to ${targets.join(", ")} (${i + targets.length} / ${emails.length})`,

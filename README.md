@@ -17,9 +17,9 @@ HERMES_MAIL_TOKEN="<your token>"
 然後執行
 
 ```bash
-pnpm send emails/discord-bot.html -s '信件標題' -l maillists/dev.csv
+pnpm send static/email/1-discord-bot.html -s '信件標題' -l maillists/dev.csv
 ```
 
-這將會把 `emails/discord-bot.html` 的內容，以 `信件標題` 的標題，寄給 `maillists/dev.csv` 中的所有人。
+這將會把 `static/email/1-discord-bot.html` 的內容，以 `信件標題` 的標題，寄給 `maillists/dev.csv` 中的所有人。
 
 > `pnpm send --help` 查看更多用法。
