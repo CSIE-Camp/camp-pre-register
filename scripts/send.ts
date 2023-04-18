@@ -19,7 +19,7 @@ program
 	.action(async (mail: string, options: { to?: string[]; list?: string; subject?: string }) => {
 		const html = fs.readFileSync(mail, "utf-8");
 		const emails = options.to ?? [];
-		const subject = options.subject ?? "";
+		let subject = options.subject ?? "";
 
 		if (options.list) {
 			const list = fs.readFileSync(options.list, "utf-8");
@@ -36,7 +36,7 @@ program
 		}
 
 		if (options.list && options.list.toLowerCase().includes("dev")) {
-			options.subject = "[測試] " + options.subject;
+			subject = "[測試] " + options.subject;
 		}
 
 		console.log("Emails:", emails.join(", "));
