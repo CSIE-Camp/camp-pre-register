@@ -27,6 +27,8 @@
 				show_form = true;
 			}, 100);
 		}
+
+		hello();
 	});
 
 	let email_error = "";
@@ -75,6 +77,23 @@
 		} finally {
 			submitting = false;
 		}
+	}
+
+	function hello() {
+		console.clear();
+		console.log("%c👋 嗨，你好！", "font-size: 2rem; font-weight: bold; color: #192189");
+		console.log(
+			"%c好奇這個網站是怎麼做出來的嗎？",
+			"font-size: 1.5rem; font-weight: bold; color: #dc6a0b",
+		);
+		console.log(
+			"%cGitHub Repo: https://github.com/CSIE-Camp/camp-pre-register",
+			"color: #da5512",
+		);
+		console.log(
+			"%c歡迎來報名資工營找我們玩！",
+			"font-size: 1.5rem; font-weight: bold; color: #e7ae16",
+		);
 	}
 </script>
 
